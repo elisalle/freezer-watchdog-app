@@ -7,5 +7,5 @@ class SystemStatusModel {
     var freezer_id: String? = null
     var status: Boolean? = null
 
-    override fun toString(): String = "{freezer_id: ${freezer_id}, status: ${status}}"
+    override fun toString(): String = "SystemStatusModel(freezer_id=${freezer_id}, status=${status})"
 }
