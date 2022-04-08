@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // This will pass the ArrayList to our Adapter
-        val adapter = CustomAdapter(data)
+        val adapter = RecyclerViewAdapter(data)
 
         // Setting the Adapter with the recyclerview
         recyclerview.adapter = adapter
