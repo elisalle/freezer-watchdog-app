@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.main_toolbar))
 
         suspend fun getFreezerSystemStatus(system_id: String): List<SystemStatusModel>? {
             // Try catch block to handle exceptions when calling the API.
