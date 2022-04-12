@@ -1,57 +1,43 @@
 package com.example.freezerwatchdog
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val btnGetData = findViewById<Button>(R.id.btnGetData)
-
-        btnGetData.setOnClickListener {
-            // Use launch and pass Dispatchers.Main to tell that
-            // the result of this Coroutine is expected on the main thread.
-            launch(Dispatchers.Main) {
-                // Try catch block to handle exceptions when calling the API.
-                try {
-                    val response = ApiAdapter.apiClient.getFreezerSystemStatus("JH95Q")
-                    // Check if response was successful.
-                    if (response.isSuccessful && response.body() != null) {
-                        val data = response.body()!!
-                        // Check for null
-                        data.let { data_checked ->
-                            // Load URL into the ImageView using Coil.
-                            Log.i(TAG, data_checked.toString())
-                        }
-                    } else {
-                        // Show API error.
-                        Log.e(TAG, "error ${response.message()}")
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Error Occurred: ${response.message()}",
-                            Toast.LENGTH_LONG).show()
-                    }
-                } catch (e: Exception) {
-                    // Show API error. This is the error raised by the client.
-                    Log.e(TAG, "Exception ${e.message}")
-                    Toast.makeText(this@MainActivity,
-                        "Exception Occurred: ${e.message}",
-                        Toast.LENGTH_LONG).show()
-                }
+        suspend fun getFreezerSystemStatus(system_id: String): List<SystemStatusModel>? {
+            // Try catch block to handle exceptions when calling the API.
+            try {
+                val response = ApiAdapter.apiClient.getFreezerSystemStatus(system_id)
+                // Check if response was successful.
+                check(response.isSuccessful && response.body() != null) { "No data was returned by the API!" }
+                // Check for null
+                return response.body()!!
+            } catch (e: Exception) {
+                // Show API error. This is the error raised by the client.
+                Log.e(TAG, e.message.toString())
+                Looper.prepare()
+                Toast.makeText(this@MainActivity,
+                    "Exception Occurred: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                Looper.loop()
             }
+            return null
         }
 
         // getting the recyclerview by its id
@@ -61,24 +47,45 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         recyclerview.layoutManager = LinearLayoutManager(this)
 
         // ArrayList of class ItemsViewModel
-        val data = ArrayList<ItemsViewModel>()
-
-        // This loop will create 20 Views containing
-        // the image with the count of view
-        for (i in 1..20) {
-            data.add(
-                ItemsViewModel(
-                    "Freezer $i",
-                    "Open!"
-                )
-            )
-        }
+        val arrayData = ArrayList<ItemsViewModel>()
 
         // This will pass the ArrayList to our Adapter
-        val adapter = RecyclerViewAdapter(data)
+        val adapter = RecyclerViewAdapter(arrayData)
 
         // Setting the Adapter with the recyclerview
         recyclerview.adapter = adapter
+        Log.i("job", "done")
+
+        Toast.makeText(this@MainActivity,
+            "Please refresh to show freezer data",
+            Toast.LENGTH_LONG
+        ).show()
+
+        // Defining the refresh button
+        val btnGetData = findViewById<Button>(R.id.btnGetData)
+
+        btnGetData.setOnClickListener {
+            // Use launch and pass Dispatchers.Main to tell that
+            // the result of this Coroutine is expected on the main thread.
+            val refreshJob = launch(Dispatchers.IO) {
+                val apiData = getFreezerSystemStatus("JH95Q")
+                arrayData.clear()
+                if (apiData != null) {
+                    for (i in apiData) {
+                        arrayData.add(
+                            ItemsViewModel(
+                                i.freezer_id.toString(),
+                                if (i.status == true) "Open!" else "Closed"
+                            )
+                        )
+                    }
+                }
+            }
+            launch(Dispatchers.Main) {
+                refreshJob.join()
+                adapter.notifyDataSetChanged()
+            }
+        }
 
     }
 }
