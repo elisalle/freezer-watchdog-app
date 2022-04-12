@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -16,11 +18,19 @@ import kotlinx.coroutines.*
 const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.main_toolbar))
+
 
         suspend fun getFreezerSystemStatus(system_id: String): List<SystemStatusModel>? {
             // Try catch block to handle exceptions when calling the API.
