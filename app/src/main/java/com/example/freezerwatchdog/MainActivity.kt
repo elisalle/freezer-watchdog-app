@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -64,10 +66,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         // Defining the refresh button
         val btnGetData = findViewById<Button>(R.id.btnGetData)
 
+        val progressBar = findViewById<ProgressBar>(R.id.loadingSpinner)
+
+        val freezerOpenStatusText = resources.getString(R.string.freezer_open_status)
+        val freezerClosedStatusText = resources.getString(R.string.freezer_closed_status)
+
         btnGetData.setOnClickListener {
+            progressBar.visibility = View.VISIBLE
             // Use launch and pass Dispatchers.Main to tell that
             // the result of this Coroutine is expected on the main thread.
             val refreshJob = launch(Dispatchers.IO) {
+                delay(2000)
                 val apiData = getFreezerSystemStatus("JH95Q")
                 arrayData.clear()
                 if (apiData != null) {
@@ -75,7 +84,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                         arrayData.add(
                             ItemsViewModel(
                                 i.freezer_id.toString(),
-                                if (i.status == true) "Open!" else "Closed"
+                                if (i.status == true) freezerOpenStatusText else freezerClosedStatusText
                             )
                         )
                     }
@@ -83,6 +92,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             }
             launch(Dispatchers.Main) {
                 refreshJob.join()
+                progressBar.visibility = View.GONE
                 adapter.notifyDataSetChanged()
             }
         }

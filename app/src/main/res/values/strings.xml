@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Freezer Watchdog</string>
+    <string name="refresh_button_text">Refresh Data</string>
+    <string name="freezer_open_status">Open!</string>
+    <string name="freezer_closed_status">Closed</string>
 </resources>
