@@ -9,10 +9,9 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -46,6 +45,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.main_toolbar))
+
+        fun getFreezerSystemId(): String? {
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+            val storedFreezerSystemID = sharedPreferences.getString("freezersystem", "")
+            return (if (storedFreezerSystemID == "") null else storedFreezerSystemID)
+        }
 
 
         suspend fun getFreezerSystemStatus(system_id: String): List<SystemStatusModel>? {
@@ -89,29 +94,39 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         val mySwipeRefreshLayout = findViewById<SwipeRefreshLayout>(R.id.swiperefresh)
         fun refreshFreezerView () {
-            // progressBar.visibility = View.VISIBLE
-            // Use launch and pass Dispatchers.Main to tell that
-            // the result of this Coroutine is expected on the main thread.
-            val refreshJob = launch(Dispatchers.IO) {
-                delay(2000)
-                val apiData = getFreezerSystemStatus("JH95Q")
-                arrayData.clear()
-                if (apiData != null) {
-                    for (i in apiData) {
-                        arrayData.add(
-                            ItemsViewModel(
-                                i.freezer_id.toString(),
-                                if (i.status == true) freezerOpenStatusText else freezerClosedStatusText
+            val freezerSystemID = getFreezerSystemId()
+            if (freezerSystemID == null) {
+                mySwipeRefreshLayout.setRefreshing(false)
+                Toast.makeText(this@MainActivity,
+                    "First set the freezer system ID in preferences",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            else {
+                // progressBar.visibility = View.VISIBLE
+                // Use launch and pass Dispatchers.Main to tell that
+                // the result of this Coroutine is expected on the main thread.
+                val refreshJob = launch(Dispatchers.IO) {
+//                    delay(2000)
+                    val apiData = getFreezerSystemStatus(freezerSystemID)
+                    arrayData.clear()
+                    if (apiData != null) {
+                        for (i in apiData) {
+                            arrayData.add(
+                                ItemsViewModel(
+                                    i.freezer_id.toString(),
+                                    if (i.status == true) freezerOpenStatusText else freezerClosedStatusText
+                                )
                             )
-                        )
+                        }
                     }
                 }
-            }
-            launch(Dispatchers.Main) {
-                refreshJob.join()
-                // progressBar.visibility = View.GONE
-                adapter.notifyDataSetChanged()
-                mySwipeRefreshLayout.setRefreshing(false)
+                launch(Dispatchers.Main) {
+                    refreshJob.join()
+                    // progressBar.visibility = View.GONE
+                    adapter.notifyDataSetChanged()
+                    mySwipeRefreshLayout.setRefreshing(false)
+                }
             }
         }
 
