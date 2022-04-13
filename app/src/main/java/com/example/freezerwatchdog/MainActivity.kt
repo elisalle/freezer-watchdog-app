@@ -6,7 +6,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -14,9 +13,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.*
 
-const val TAG = "MainActivity"
+const val LOG_TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 return response.body()!!
             } catch (e: Exception) {
                 // Show API error. This is the error raised by the client.
-                Log.e(TAG, e.message.toString())
+                Log.e(LOG_TAG, e.message.toString())
                 Looper.prepare()
                 Toast.makeText(this@MainActivity,
                     "Exception Occurred: ${e.message}",
@@ -71,20 +71,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         Log.i("job", "done")
 
         Toast.makeText(this@MainActivity,
-            "Please refresh to show freezer data",
+            "Refresh by swiping down from top to show freezer data",
             Toast.LENGTH_LONG
         ).show()
-
-        // Defining the refresh button
-        val btnGetData = findViewById<Button>(R.id.btnGetData)
-
-        val progressBar = findViewById<ProgressBar>(R.id.loadingSpinner)
 
         val freezerOpenStatusText = resources.getString(R.string.freezer_open_status)
         val freezerClosedStatusText = resources.getString(R.string.freezer_closed_status)
 
+        val mySwipeRefreshLayout = findViewById<SwipeRefreshLayout>(R.id.swiperefresh)
         fun refreshFreezerView () {
-            progressBar.visibility = View.VISIBLE
+            // progressBar.visibility = View.VISIBLE
             // Use launch and pass Dispatchers.Main to tell that
             // the result of this Coroutine is expected on the main thread.
             val refreshJob = launch(Dispatchers.IO) {
@@ -104,12 +100,18 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
             }
             launch(Dispatchers.Main) {
                 refreshJob.join()
-                progressBar.visibility = View.GONE
+                // progressBar.visibility = View.GONE
                 adapter.notifyDataSetChanged()
+                mySwipeRefreshLayout.setRefreshing(false)
             }
         }
 
-        btnGetData.setOnClickListener {
+        // Defining the refresh gesture
+        mySwipeRefreshLayout.setOnRefreshListener {
+            Log.i(LOG_TAG, "onRefresh called from SwipeRefreshLayout")
+
+            // This method performs the actual data-refresh operation.
+            // The method calls setRefreshing(false) when it's finished.
             refreshFreezerView()
         }
 
