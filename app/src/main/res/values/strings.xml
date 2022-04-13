@@ -2,5 +2,7 @@
     <string name="app_name">Freezer Watchdog</string>
     <string name="freezer_open_status">Open!</string>
     <string name="freezer_closed_status">Closed</string>
+    <string name="refresh_prompt_text">Refresh to show freezer data</string>
+    <string name="refresh_button_text">Refresh</string>
     <string name="settings">Preferences</string>
 </resources>

@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.*
 
 const val LOG_TAG = "MainActivity"
@@ -82,12 +83,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         // Setting the Adapter with the recyclerview
         recyclerview.adapter = adapter
-        Log.i("job", "done")
-
-        Toast.makeText(this@MainActivity,
-            "Refresh by swiping down from top to show freezer data",
-            Toast.LENGTH_LONG
-        ).show()
 
         val freezerOpenStatusText = resources.getString(R.string.freezer_open_status)
         val freezerClosedStatusText = resources.getString(R.string.freezer_closed_status)
@@ -122,12 +117,26 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
         // Defining the refresh gesture
         mySwipeRefreshLayout.setOnRefreshListener {
-            Log.i(LOG_TAG, "onRefresh called from SwipeRefreshLayout")
+            Log.i(LOG_TAG, "refreshFreezerView called from SwipeRefreshLayout")
 
             // This method performs the actual data-refresh operation.
             // The method calls setRefreshing(false) when it's finished.
             refreshFreezerView()
         }
+
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            resources.getString(R.string.refresh_prompt_text),
+            Snackbar.LENGTH_LONG
+        )
+            .setAction(
+                resources.getString(R.string.refresh_button_text), View.OnClickListener {
+                    Log.i(LOG_TAG, "refreshFreezerView called from Snackbar")
+                    mySwipeRefreshLayout.setRefreshing(true)
+                    refreshFreezerView()
+                }
+            )
+            .show()
 
     }
 }
