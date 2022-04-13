@@ -1,0 +1,9 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        app:key="freezersystem"
+        app:title="Freezer system to follow"
+        app:useSimpleSummaryProvider="true"
+        />
+
+</PreferenceScreen>
