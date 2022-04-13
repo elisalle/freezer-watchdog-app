@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -82,7 +83,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         val freezerOpenStatusText = resources.getString(R.string.freezer_open_status)
         val freezerClosedStatusText = resources.getString(R.string.freezer_closed_status)
 
-        btnGetData.setOnClickListener {
+        fun refreshFreezerView () {
             progressBar.visibility = View.VISIBLE
             // Use launch and pass Dispatchers.Main to tell that
             // the result of this Coroutine is expected on the main thread.
@@ -106,6 +107,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 progressBar.visibility = View.GONE
                 adapter.notifyDataSetChanged()
             }
+        }
+
+        btnGetData.setOnClickListener {
+            refreshFreezerView()
         }
 
     }
