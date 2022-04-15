@@ -106,7 +106,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
                 // Use launch and pass Dispatchers.Main to tell that
                 // the result of this Coroutine is expected on the main thread.
                 val refreshJob = launch(Dispatchers.IO) {
-//                    delay(2000)
                     val apiData = getFreezerSystemStatus(freezerSystemID)
                     arrayData.clear()
                     apiData?.forEach {
