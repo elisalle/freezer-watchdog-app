@@ -54,22 +54,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
 
         suspend fun getFreezerSystemStatus(system_id: String): List<SystemStatusModel>? {
-            // Try catch block to handle exceptions when calling the API.
             try {
                 val response = ApiAdapter.apiClient.getFreezerSystemStatus(system_id)
                 // Check if response was successful.
                 check(response.isSuccessful && response.body() != null) { "No data was returned by the API!" }
                 // Check for null
                 return response.body()!!
-            } catch (e: Exception) {
+            }
+            catch(e: Exception) {
                 // Show API error. This is the error raised by the client.
                 Log.e(LOG_TAG, e.message.toString())
-                Looper.prepare()
-                Toast.makeText(this@MainActivity,
-                    "Exception Occurred: ${e.message}",
-                    Toast.LENGTH_LONG
+                Snackbar.make(
+                    findViewById(android.R.id.content),
+                    e.message.toString(),
+                    Snackbar.LENGTH_LONG
                 ).show()
-                Looper.loop()
             }
             return null
         }
@@ -110,15 +109,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 //                    delay(2000)
                     val apiData = getFreezerSystemStatus(freezerSystemID)
                     arrayData.clear()
-                    if (apiData != null) {
-                        for (i in apiData) {
-                            arrayData.add(
-                                ItemsViewModel(
-                                    i.freezer_id.toString(),
-                                    if (i.status == true) freezerOpenStatusText else freezerClosedStatusText
-                                )
+                    apiData?.forEach {
+                        arrayData.add(
+                            ItemsViewModel(
+                                it.freezer_id.toString(),
+                                if (it.status == true) freezerOpenStatusText else freezerClosedStatusText
                             )
-                        }
+                        )
                     }
                 }
                 launch(Dispatchers.Main) {
